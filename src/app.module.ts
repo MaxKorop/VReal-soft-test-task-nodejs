@@ -6,7 +6,9 @@ import { ConfigModule } from '@nestjs/config';
 
 @Module({
 	imports: [
-		ConfigModule.forRoot(),
+		ConfigModule.forRoot({
+			isGlobal: true
+		}),
 		UserModule,
 		PostModule,
 		MongooseModule.forRoot(process.env.CONNECTION_STRING, {
