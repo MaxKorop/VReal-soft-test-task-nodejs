@@ -59,7 +59,7 @@ export class UserService {
         return users.map((user: UserDocument) => { const {password, ...userObj} = user.toObject(); return new UserFromToken(userObj) })
     }
 
-    async getUserById(id: string) {
+    async getUserById(id: string): Promise<UserFromToken> {
         const user = await this.userModel.findById(id);
         if (!user) throw new BadRequestException("This user does not exist");
 
@@ -67,7 +67,7 @@ export class UserService {
         return responseUser;
     }
 
-    async updateUser(user: UpdateUserDto, req: Request) {
+    async updateUser(user: UpdateUserDto, req: Request): Promise<{ token: string }> {
         const { id, ...userToUpdate } = user;
         const reqUser: UserFromToken = req['user'];
         if (reqUser.role !== "ADMIN") {
@@ -94,7 +94,7 @@ export class UserService {
         return { token };
     }
 
-    async deleteUser(id: string, req: Request) {
+    async deleteUser(id: string, req: Request): Promise<{ message: string }> {
         const reqUser: UserFromToken = req['user'];
         if (reqUser.role !== "ADMIN") throw new ForbiddenException("You do not have permissions to do this");
         const userToDelete = await this.userModel.findByIdAndDelete(id);
