@@ -2,15 +2,13 @@ import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/com
 import { InjectModel } from '@nestjs/mongoose';
 import { Post } from './post.schema';
 import { Model } from 'mongoose';
-import { ConfigService } from '@nestjs/config';
 import { CreatePostDto, DeletePostDto, DeleteResponseDto, ResponsePostDto, UpdatePostDto } from './dto/post.dto';
 import { UserFromToken } from 'src/user/dto/user.dto';
 
 @Injectable()
 export class PostService {
     constructor(
-        @InjectModel(Post.name) private postModel: Model<Post>,
-        private configService: ConfigService
+        @InjectModel(Post.name) private postModel: Model<Post>
     ) { }
     
     async getAll(id_array?: string[]): Promise<ResponsePostDto[]> {
