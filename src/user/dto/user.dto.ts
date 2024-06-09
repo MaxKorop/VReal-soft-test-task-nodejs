@@ -104,7 +104,8 @@ export class UpdateUserDto {
     @IsOptional()
     @ApiProperty({
         description: "New role of user (can be changed by other user with ADMIN role)",
-        required: false
+        required: false,
+        enum: Roles
     })
     readonly role?: Roles
 }
@@ -128,7 +129,7 @@ export class UserFromToken {
     @ApiResponseProperty({ type: String })
     aboutMe: string
 
-    @ApiResponseProperty({ type: String })
+    @ApiResponseProperty({ type: String, enum: Roles })
     role: Roles
 
     @ApiResponseProperty({ type: [String] })

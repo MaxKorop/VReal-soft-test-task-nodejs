@@ -5,7 +5,7 @@ import { Model } from 'mongoose';
 import { User, UserDocument } from './user.schema';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { Roles, UpdateUserDto, UserFromToken } from './dto/user.dto';
+import { AuthResponseDto, DeleteResponseDto, Roles, UpdateUserDto, UserFromToken } from './dto/user.dto';
 
 @Injectable()
 export class UserService {
@@ -15,7 +15,7 @@ export class UserService {
         private configService: ConfigService
     ) { }
 
-    async signUp(username: string, password: string, role?: Roles): Promise<{ token: string }> {
+    async signUp(username: string, password: string, role?: Roles): Promise<AuthResponseDto> {
         const findUser = await this.userModel.findOne({ username });
         if (findUser) {
             throw new UnauthorizedException('User with this username already exists');
@@ -31,7 +31,7 @@ export class UserService {
         return { token };
     }
     
-    async logIn(username: string, password: string): Promise<{ token: string }> {
+    async logIn(username: string, password: string): Promise<AuthResponseDto> {
         const findUser = await this.userModel.findOne({ username });
         if (!findUser) throw new UnauthorizedException('Invalid credentials');
         const isPasswordMatched = await bcrypt.compare(password, findUser.password); 
@@ -43,7 +43,7 @@ export class UserService {
         return { token };
     }
 
-    async updateToken(req: Request): Promise<{ token: string }> {
+    async updateToken(req: Request): Promise<AuthResponseDto> {
         const oldTokenUser: UserFromToken = req['user'];
         const { password, ...user } = (await this.userModel.findById(oldTokenUser._id)).toObject();
         if (!user) throw new UnauthorizedException("Your token is not authorized");
@@ -68,7 +68,7 @@ export class UserService {
         return responseUser;
     }
 
-    async updateUser(user: UpdateUserDto, req: Request): Promise<{ token: string }> {
+    async updateUser(user: UpdateUserDto, req: Request): Promise<AuthResponseDto> {
         const { id, ...userToUpdate } = user;
         const reqUser: UserFromToken = req['user'];
         if (reqUser.role !== "ADMIN") {
@@ -98,7 +98,7 @@ export class UserService {
         return { token };
     }
 
-    async deleteUser(id: string, req: Request): Promise<{ message: string }> {
+    async deleteUser(id: string, req: Request): Promise<DeleteResponseDto> {
         const reqUser: UserFromToken = req['user'];
         if (reqUser.role !== "ADMIN") throw new ForbiddenException("You do not have permissions to do this");
         const userToDelete = await this.userModel.findOneAndDelete({ _id: id });

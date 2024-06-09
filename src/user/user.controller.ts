@@ -15,7 +15,7 @@ export class UserController {
 		status: 201
 	})
 	@Post('signUp')
-	async signUp(@Body() body: SignUpDto): Promise<{ token: string }> {
+	async signUp(@Body() body: SignUpDto): Promise<AuthResponseDto> {
 		return this.userService.signUp(body.username, body.password, body.role);
 	}
 
@@ -25,7 +25,7 @@ export class UserController {
 		status: 201
 	})
 	@Post('logIn')
-	async logIn(@Body() body: LogInDto): Promise<{ token: string }> {
+	async logIn(@Body() body: LogInDto): Promise<AuthResponseDto> {
 		return this.userService.logIn(body.username, body.password);
 	}
 
@@ -37,12 +37,12 @@ export class UserController {
 	@ApiBearerAuth('JWT-auth')
 	@UseGuards(JwtAuthGuard)
 	@Get('updateToken')
-	async updateToken(@Request() req: Request): Promise<{ token: string }> {
+	async updateToken(@Request() req: Request): Promise<AuthResponseDto> {
 		return this.userService.updateToken(req);
 	}
 
 	@ApiOkResponse({
-		description: 'Returns array of users (all users if id array not set)',
+		description: 'Returns array of users (returns all users if id array not set)',
 		type: UserFromToken,
 		status: 200
 	})
@@ -53,7 +53,7 @@ export class UserController {
 	}
 
 	@ApiOkResponse({
-		description: 'Returns user',
+		description: 'Returns specified user',
 		type: UserFromToken,
 		status: 200
 	})
@@ -71,7 +71,7 @@ export class UserController {
 	@ApiBearerAuth('JWT-auth')
 	@UseGuards(JwtAuthGuard)
 	@Put('update')
-	async updateUser(@Body() body: UpdateUserDto, @Request() req: Request): Promise<{ token: string }> {
+	async updateUser(@Body() body: UpdateUserDto, @Request() req: Request): Promise<AuthResponseDto> {
 		return this.userService.updateUser(body, req);
 	}
 
@@ -82,7 +82,7 @@ export class UserController {
 	@ApiBearerAuth('JWT-auth')
 	@UseGuards(JwtAuthGuard)
 	@Delete('delete')
-	async deleteUser(@Body() body: DeleteUserDto, @Request() req: Request): Promise<{ message: string }> {
+	async deleteUser(@Body() body: DeleteUserDto, @Request() req: Request): Promise<DeleteResponseDto> {
 		return this.userService.deleteUser(body.id, req);
 	}
 }
