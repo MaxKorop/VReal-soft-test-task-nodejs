@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Post } from './post.schema';
 import { Model } from 'mongoose';
 import { ConfigService } from '@nestjs/config';
-import { CreatePostDto, DeletePostDto, ResponsePostDto, UpdatePostDto } from './dto/post.dto';
+import { CreatePostDto, DeletePostDto, DeleteResponseDto, ResponsePostDto, UpdatePostDto } from './dto/post.dto';
 import { UserFromToken } from 'src/user/dto/user.dto';
 
 @Injectable()
@@ -42,19 +42,19 @@ export class PostService {
         }
         if (!Object.keys(newFields).length) throw new BadRequestException("You're trying to update, but you haven't specified anything");
 
-        const updatedPost = await this.postModel.findByIdAndUpdate(post.id, newFields, { new: true });
+        const updatedPost = await this.postModel.findOneAndUpdate({ _id: post.id }, newFields, { new: true });
         if (!updatedPost) throw new BadRequestException("This post does not exist");
 
         return new ResponsePostDto({ ...updatedPost.toObject() });
     }
     
-    async delete(post: DeletePostDto, req: Request): Promise<{ message: string }> {
+    async delete(post: DeletePostDto, req: Request): Promise<DeleteResponseDto> {
         const reqUser: UserFromToken = req['user'];
         if (reqUser.role !== "ADMIN") {
             if (!reqUser.posts.includes(post.id)) throw new ForbiddenException("You do not have permissions to do this");
         }
 
-        const deletedPost = await this.postModel.findByIdAndDelete(post.id);
+        const deletedPost = await this.postModel.findOneAndDelete({ _id: post.id });
         if (!deletedPost) throw new BadRequestException("This post does not exist");
         return { message: 'Post deleted successfully' };
     }
