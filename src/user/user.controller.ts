@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Query, Request, UseGuards } from '@nestjs/common';
 import { UserService } from './user.service';
-import { AuthDto, UpdateUserDto, DeleteUserDto, UserFromToken } from './dto/user.dto';
-import { ApiBearerAuth, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { UpdateUserDto, DeleteUserDto, UserFromToken, AuthResponseDto, SignUpDto, LogInDto, DeleteResponseDto } from './dto/user.dto';
+import { ApiBearerAuth, ApiOkResponse, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/guards/jwt-guard.guard';
 
 @ApiTags('User')
@@ -9,16 +9,31 @@ import { JwtAuthGuard } from 'src/guards/jwt-guard.guard';
 export class UserController {
 	constructor(private readonly userService: UserService) { }
 
+	@ApiOkResponse({
+		description: 'Returns token (JWT) which needed to set as Bearer token in Authorization header',
+		type: AuthResponseDto,
+		status: 201
+	})
 	@Post('signUp')
-	async signUp(@Body() body: AuthDto): Promise<{ token: string }> {
-		return this.userService.signUp(body.username, body.password);
+	async signUp(@Body() body: SignUpDto): Promise<{ token: string }> {
+		return this.userService.signUp(body.username, body.password, body.role);
 	}
 
+	@ApiOkResponse({
+		description: 'Returns token (JWT) which needed to set as Bearer token in Authorization header',
+		type: AuthResponseDto,
+		status: 201
+	})
 	@Post('logIn')
-	async logIn(@Body() body: AuthDto): Promise<{ token: string }> {
+	async logIn(@Body() body: LogInDto): Promise<{ token: string }> {
 		return this.userService.logIn(body.username, body.password);
 	}
 
+	@ApiOkResponse({
+		description: 'Returns token (JWT) which needed to set as Bearer token in Authorization header',
+		type: AuthResponseDto,
+		status: 200
+	})
 	@ApiBearerAuth('JWT-auth')
 	@UseGuards(JwtAuthGuard)
 	@Get('updateToken')
@@ -26,18 +41,33 @@ export class UserController {
 		return this.userService.updateToken(req);
 	}
 
-	@ApiQuery({ required: false, type: [String] })
+	@ApiOkResponse({
+		description: 'Returns array of users (all users if id array not set)',
+		type: UserFromToken,
+		status: 200
+	})
+	@ApiQuery({ name: 'id', description: 'ID array of users', required: false, type: [String] })
 	@Get()
 	async getUsers(@Query() query?: { idArray: string[] }): Promise<UserFromToken[]> {
 		return this.userService.getUsers(query.idArray);
 	}
 
-	@ApiParam({ name: 'id', type: String, required: false })
+	@ApiOkResponse({
+		description: 'Returns user',
+		type: UserFromToken,
+		status: 200
+	})
+	@ApiParam({ name: 'id', description: 'ID of the user', type: String, required: false })
 	@Get(':id')
 	async getUserById(@Param('id') id: string): Promise<UserFromToken> {
 		return this.userService.getUserById(id);
 	}
 
+	@ApiOkResponse({
+		description: 'Returns token (JWT) which needed to set as Bearer token in Authorization header',
+		type: AuthResponseDto,
+		status: 200
+	})
 	@ApiBearerAuth('JWT-auth')
 	@UseGuards(JwtAuthGuard)
 	@Put('update')
@@ -45,6 +75,10 @@ export class UserController {
 		return this.userService.updateUser(body, req);
 	}
 
+	@ApiOkResponse({
+		description: 'Returns message that user was deleted successfully',
+		type: DeleteResponseDto
+	})
 	@ApiBearerAuth('JWT-auth')
 	@UseGuards(JwtAuthGuard)
 	@Delete('delete')

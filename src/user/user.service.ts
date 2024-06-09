@@ -5,7 +5,7 @@ import { Model } from 'mongoose';
 import { User, UserDocument } from './user.schema';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { UpdateUserDto, UserFromToken } from './dto/user.dto';
+import { Roles, UpdateUserDto, UserFromToken } from './dto/user.dto';
 
 @Injectable()
 export class UserService {
@@ -15,15 +15,16 @@ export class UserService {
         private configService: ConfigService
     ) { }
 
-    async signUp(username: string, password: string): Promise<{ token: string }> {
+    async signUp(username: string, password: string, role?: Roles): Promise<{ token: string }> {
         const findUser = await this.userModel.findOne({ username });
         if (findUser) {
-            throw new UnauthorizedException('User with this username already exists.');
+            throw new UnauthorizedException('User with this username already exists');
         }
         const hashedPassword = await bcrypt.hash(password, 10);
         const newUser = await this.userModel.create({
-            username: username,
+            username,
             password: hashedPassword,
+            role
         });
         const { password: newUserPassword, ...user } = newUser.toObject();
         const token = this.jwtService.sign(user, { secret: this.configService.get<string>("JWT_SECRET_KEY") });
@@ -32,10 +33,10 @@ export class UserService {
     
     async logIn(username: string, password: string): Promise<{ token: string }> {
         const findUser = await this.userModel.findOne({ username });
-        if (!findUser) throw new UnauthorizedException('Invalid credentials.');
+        if (!findUser) throw new UnauthorizedException('Invalid credentials');
         const isPasswordMatched = await bcrypt.compare(password, findUser.password); 
         if (!isPasswordMatched) {
-            throw new UnauthorizedException('Invalid credentials.');
+            throw new UnauthorizedException('Invalid credentials');
         }
         const { password: findUserPassword, ...user } = findUser.toObject();
         const token = this.jwtService.sign(user, { secret: this.configService.get<string>("JWT_SECRET_KEY") });
@@ -44,9 +45,9 @@ export class UserService {
 
     async updateToken(req: Request): Promise<{ token: string }> {
         const oldTokenUser: UserFromToken = req['user'];
-        console.log(oldTokenUser);
         const { password, ...user } = (await this.userModel.findById(oldTokenUser._id)).toObject();
         if (!user) throw new UnauthorizedException("Your token is not authorized");
+
         const token = this.jwtService.sign(user, { secret: this.configService.get<string>("JWT_SECRET_KEY") });
         return { token };
     }
@@ -85,6 +86,9 @@ export class UserService {
         if (!Object.keys(newFields).length) {
             throw new BadRequestException("You're trying to update, but you haven't specified anything");
         }
+        if (newFields['password']) {
+            newFields['password'] = await bcrypt.hash(newFields['password'], 10);
+        }
 
         const newUser = await this.userModel.findByIdAndUpdate(id, newFields, { new: true });
         if (!newUser) throw new BadRequestException("This user does not exist");
@@ -97,7 +101,7 @@ export class UserService {
     async deleteUser(id: string, req: Request): Promise<{ message: string }> {
         const reqUser: UserFromToken = req['user'];
         if (reqUser.role !== "ADMIN") throw new ForbiddenException("You do not have permissions to do this");
-        const userToDelete = await this.userModel.findByIdAndDelete(id);
+        const userToDelete = await this.userModel.findOneAndDelete({ _id: id });
         if (!userToDelete) throw new BadRequestException("This user does not exist");
         return { message: "User deleted successfully" };
     }

@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import mongoose, { HydratedDocument } from "mongoose";
+import { HydratedDocument, Types, Schema as SchemaType } from "mongoose";
 import { Roles } from "./dto/user.dto";
 
 export type UserDocument = HydratedDocument<User>;
@@ -22,8 +22,8 @@ export class User {
     })
     role: Roles
 
-    @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Post' }] })
-    posts: mongoose.Schema.Types.ObjectId[]
+    @Prop({ type: [{ type: SchemaType.Types.ObjectId, ref: 'Post' }] })
+    posts: Types.ObjectId[]
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

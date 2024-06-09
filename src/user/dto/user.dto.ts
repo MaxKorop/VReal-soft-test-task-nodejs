@@ -1,19 +1,19 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
-import { Types, Schema } from 'mongoose';
+import { ApiProperty, ApiResponseProperty } from '@nestjs/swagger';
+import { IsEnum, IsNotEmpty, IsOptional, IsString, IsStrongPassword, MaxLength, MinLength } from 'class-validator';
+import { Types } from 'mongoose';
 
 export enum Roles {
     USER = "USER",
     ADMIN = "ADMIN"
 }
 
-export class AuthDto {
+export class LogInDto {
     @IsNotEmpty()
     @IsString()
     @MinLength(2)
     @MaxLength(30)
     @ApiProperty({
-        description: "username of user",
+        description: "The username of user",
         minLength: 2,
         maxLength: 30
     })
@@ -21,21 +21,34 @@ export class AuthDto {
 
     @IsNotEmpty()
     @IsString()
+    @IsStrongPassword({
+        minLowercase: 1,
+        minNumbers: 1,
+        minSymbols: 1,
+        minUppercase: 1,
+    })
     @MinLength(8)
     @MaxLength(20)
     @ApiProperty({
-        description: "password of the user",
+        description: "The password of the user",
         minLength: 8,
         maxLength: 20
     })
     readonly password: string
 }
 
+export class SignUpDto extends LogInDto {
+    @IsEnum(Roles)
+    @IsOptional()
+    @ApiProperty({ description: 'The role of the user', enum: Roles, required: false, default: 'USER' })
+    readonly role?: Roles = Roles.USER;
+}
+
 export class UpdateUserDto {
     @IsString()
     @IsNotEmpty()
     @ApiProperty({
-        description: "id of user that will be updated"
+        description: "ID of user that will be updated"
     })
     readonly id: string
 
@@ -44,7 +57,7 @@ export class UpdateUserDto {
     @MaxLength(30)
     @IsOptional()
     @ApiProperty({
-        description: "new username of updated user",
+        description: "New username of updated user",
         minLength: 2,
         maxLength: 30,
         required: false
@@ -54,9 +67,15 @@ export class UpdateUserDto {
     @IsString()
     @MinLength(8)
     @MaxLength(20)
+    @IsStrongPassword({
+        minLowercase: 1,
+        minNumbers: 1,
+        minSymbols: 1,
+        minUppercase: 1,
+    })
     @IsOptional()
     @ApiProperty({
-        description: "new password of user",
+        description: "New password of user",
         minLength: 8,
         maxLength: 20,
         required: false
@@ -67,7 +86,7 @@ export class UpdateUserDto {
     @MaxLength(50)
     @IsOptional()
     @ApiProperty({
-        description: "new aboutMe of user",
+        description: "New aboutMe of user",
         maxLength: 50,
         required: false
     })
@@ -76,35 +95,44 @@ export class UpdateUserDto {
     @IsString({ each: true })
     @IsOptional()
     @ApiProperty({
-        description: "new posts of user (add or remove posts of user)",
+        description: "New posts of user (add or remove posts of user)",
         required: false
     })
-    readonly posts?: Schema.Types.ObjectId[]
+    readonly posts?: Types.ObjectId[]
 
     @IsEnum(Roles)
     @IsOptional()
     @ApiProperty({
-        description: "new role of user (can be changed by other user with ADMIN role)",
+        description: "New role of user (can be changed by other user with ADMIN role)",
         required: false
     })
-    readonly role?: "USER" | "ADMIN"
+    readonly role?: Roles
 }
 
 export class DeleteUserDto {
     @IsNotEmpty()
     @IsString()
     @ApiProperty({
-        description: "id of user that will be deleted"
+        description: "ID of user that will be deleted"
     })
 	readonly id: string
 }
 
 export class UserFromToken {
+    @ApiResponseProperty({ type: String })
     _id: Types.ObjectId
+
+    @ApiResponseProperty({ type: String })
     username: string
+
+    @ApiResponseProperty({ type: String })
     aboutMe: string
-    role: "USER" | "ADMIN"
-    posts: Schema.Types.ObjectId[]
+
+    @ApiResponseProperty({ type: String })
+    role: Roles
+
+    @ApiResponseProperty({ type: [String] })
+    posts: Types.ObjectId[]
 
     constructor({
         _id, username, aboutMe, role, posts
@@ -112,8 +140,8 @@ export class UserFromToken {
         _id: Types.ObjectId,
         username: string,
         aboutMe: string,
-        role: "USER" | "ADMIN",
-        posts: Schema.Types.ObjectId[]
+        role: Roles,
+        posts: Types.ObjectId[]
     }) {
         this._id = _id;
         this.username = username;
@@ -121,4 +149,14 @@ export class UserFromToken {
         this.role = role;
         this.posts = posts;
     }
+}
+
+export class AuthResponseDto {
+    @ApiResponseProperty({ type: String })
+    token: string
+}
+
+export class DeleteResponseDto {
+    @ApiResponseProperty({ type: String })
+    message: string
 }
