@@ -2,7 +2,7 @@ import { Body, Controller, Delete, Get, Param, Post, Put, Query, Request, UseGua
 import { PostService } from './post.service';
 import { ApiBearerAuth, ApiQuery, ApiParam, ApiTags, ApiOkResponse } from '@nestjs/swagger';
 import { CreatePostDto, DeletePostDto, DeleteResponseDto, ResponsePostDto, UpdatePostDto } from './dto/post.dto';
-import { JwtAuthGuard } from 'src/guards/jwt-guard.guard';
+import { JwtAuthGuard } from 'src/guards/jwt.guard';
 
 @ApiTags('Post')
 @Controller('post')

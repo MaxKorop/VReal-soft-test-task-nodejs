@@ -1,5 +1,5 @@
 import { ApiProperty, ApiResponseProperty } from "@nestjs/swagger"
-import { IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from "class-validator"
+import { IsMongoId, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from "class-validator"
 import { Types } from "mongoose"
 
 export class ResponsePostDto {
@@ -99,6 +99,7 @@ export class UpdatePostDto implements IPostDto {
 
 export class DeletePostDto {
     @IsString()
+    @IsMongoId()
     @ApiProperty({ type: String, description: 'ID of the post to be deleted' })
     readonly id: Types.ObjectId
 }
